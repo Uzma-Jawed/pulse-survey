@@ -1,4 +1,4 @@
-import mysql.connector
+noimport mysql.connector
 import pandas as pd
 import numpy as np
 from sentence_transformers import SentenceTransformer
@@ -12,7 +12,7 @@ from datetime import datetime
 MYSQL_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'december25*',
+    'password': '', #your password
     'database': 'osprmuti_pulse_survey'
 }
 
@@ -166,4 +166,5 @@ for i, idx in enumerate(indices[0]):
 
 cursor.close()
 conn.close()
+
 print("Done!")
