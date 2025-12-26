@@ -1,4 +1,4 @@
-noimport mysql.connector
+import mysql.connector
 import pandas as pd
 import numpy as np
 from sentence_transformers import SentenceTransformer
@@ -82,10 +82,9 @@ else:
 
     print(f"Found {len(df)} new answers. Processing...")
 
-    # ==================== CREATE TEXT FOR EMBEDDING ====================
-    
-    def create_search_text(row):
-     answer = (
+# ==================== CREATE TEXT FOR EMBEDDING ====================
+def create_search_text(row):
+    answer = (
         row['binary_answer'] or
         row['scale_rating'] or
         row['open_ended_answer'] or
@@ -93,7 +92,7 @@ else:
         "No response"
     )
     # Better formatting for semantic understanding
-     return (
+    return (
         f"Employee survey response: "
         f"Question - {row['question_text']}. "
         f"Answer given - {answer}. "
@@ -101,42 +100,42 @@ else:
         f"Date: {row['created_at'].date()}"
     )
 
-    df['search_text'] = df.apply(create_search_text, axis=1)
+df['search_text'] = df.apply(create_search_text, axis=1)
 
-    # ==================== GENERATE EMBEDDINGS ====================
-    texts = df['search_text'].tolist()
-    embeddings = model.encode(texts, show_progress_bar=True)
-    embeddings = np.array(embeddings).astype('float32')
+# ==================== GENERATE EMBEDDINGS ====================
+texts = df['search_text'].tolist()
+embeddings = model.encode(texts, show_progress_bar=True)
+embeddings = np.array(embeddings).astype('float32')
 
-    # ==================== ADD TO FAISS INDEX ====================
-    index.add(embeddings)
-    print(f"Added {len(embeddings)} vectors to FAISS index. Total vectors: {index.ntotal}")
+# ==================== ADD TO FAISS INDEX ====================
+index.add(embeddings)
+print(f"Added {len(embeddings)} vectors to FAISS index. Total vectors: {index.ntotal}")
 
-    # ==================== SAVE METADATA ====================
-    for _, row in df.iterrows():
-        metadata = {
-            'answer_id': int(row['answer_id']),
-            'company_id': int(row['company_id']),
-            'user_id': int(row['user_id']),
-            'question_text': row['question_text'],
-            'question_type': row['question_type'],
-            'answer': row['binary_answer'] or row['scale_rating'] or row['open_ended_answer'] or row['nps_style_rating'],
-            'created_at': str(row['created_at']),
-            'search_text': row['search_text']
-        }
-        metadata_list.append(metadata)
+# ==================== SAVE METADATA ====================
+for _, row in df.iterrows():
+    metadata = {
+        'answer_id': int(row['answer_id']),
+        'company_id': int(row['company_id']),
+        'user_id': int(row['user_id']),
+        'question_text': row['question_text'],
+        'question_type': row['question_type'],
+        'answer': row['binary_answer'] or row['scale_rating'] or row['open_ended_answer'] or row['nps_style_rating'],
+        'created_at': str(row['created_at']),
+        'search_text': row['search_text']
+    }
+     metadata_list.append(metadata)
 
-    # ==================== SAVE INDEX & METADATA ====================
-    faiss.write_index(index, FAISS_INDEX_FILE)
-    with open(METADATA_FILE, 'wb') as f:
-        pickle.dump(metadata_list, f)
+# ==================== SAVE INDEX & METADATA ====================
+faiss.write_index(index, FAISS_INDEX_FILE)
+with open(METADATA_FILE, 'wb') as f:
+    pickle.dump(metadata_list, f)
 
-    # ==================== UPDATE LAST TIMESTAMP ====================
-    latest_timestamp = df['created_at'].max()
-    with open(LAST_TIMESTAMP_FILE, 'w') as f:
-        f.write(str(latest_timestamp))
+# ==================== UPDATE LAST TIMESTAMP ====================
+latest_timestamp = df['created_at'].max()
+with open(LAST_TIMESTAMP_FILE, 'w') as f:
+    f.write(str(latest_timestamp))
 
-    print(f"Updated index. Latest timestamp: {latest_timestamp}")
+print(f"Updated index. Latest timestamp: {latest_timestamp}")
 
 # ==================== TEST SEARCH ====================
 print("\n" + "="*50)
@@ -168,3 +167,4 @@ cursor.close()
 conn.close()
 
 print("Done!")
+
